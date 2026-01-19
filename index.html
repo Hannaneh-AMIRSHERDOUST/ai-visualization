@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Applications by Sector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            text-align: center;
+            color: #555;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .chart-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        iframe {
+            border: 1px solid #ddd;
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Applications by Sector</h1>
+        
+        <h2>RAWGraphs Bar Chart</h2>
+        <div class="chart-container">
+            <img src="ai_barchart.png" alt="AI applications per sector bar chart" width="900">
+        </div>
+        
+        <h2>Wikidata Bar Chart</h2>
+        <div class="chart-container">
+            <iframe src="https://query.wikidata.org/embed.html#SELECT%20%3Fapplication%20%3FapplicationLabel%20%3FsectorAbbrev%20%3Fyear%20%3FcountryLabel%20%3Fimage%0AWHERE%20%7B%0A%20%20%3Fapplication%20wdt%3AP31%20wd%3AQ11660.%20%20%20%20%20%20%20%23%20AI%20system%0A%20%20%3Fapplication%20wdt%3AP452%20%3Fsector.%20%20%20%20%20%20%20%20%23%20sector%0A%0A%20%20%23%20Abbreviate%20sector%20names%0A%20%20BIND%28%0A%20%20%20%20IF%28%3Fsector%20%3D%20wd%3AQ11660%2C%20%22AI%22%2C%0A%20%20%20%20%20%20IF%28%3Fsector%20%3D%20wd%3AQ184199%2C%20%22Automation%22%2C%0A%20%20%20%20%20%20%20%20IF%28%3Fsector%20%3D%20wd%3AQ1060653%2C%20%22Customer%20Service%22%2C%0A%20%20%20%20%20%20%20%20%20%20IF%28%3Fsector%20%3D%20wd%3AQ5196479%2C%20%22Customer%20Support%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20IF%28%3Fsector%20%3D%20wd%3AQ131508%2C%20%22ERP%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20IF%28%3Fsector%20%3D%20wd%3AQ1318054%2C%20%22Enterprise%20Software%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20IF%28%3Fsector%20%3D%20wd%3AQ134083964%2C%20%22Gen.%20Engine%20Opt.%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20IF%28%3Fsector%20%3D%20wd%3AQ121359%2C%20%22Infrastructure%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20IF%28%3Fsector%20%3D%20wd%3AQ1254596%2C%20%22SaaS%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20IF%28%3Fsector%20%3D%20wd%3AQ638608%2C%20%22Software%20Dev%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20IF%28%3Fsector%20%3D%20wd%3AQ880371%2C%20%22Software%20Industry%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20IF%28%3Fsector%20%3D%20wd%3AQ11016%2C%20%22Technology%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Other%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%29%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%29%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%29%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%29%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%29%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%29%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%29%0A%20%20%20%20%20%20%20%20%20%20%20%20%29%0A%20%20%20%20%20%20%20%20%20%20%29%0A%20%20%20%20%20%20%20%20%29%0A%20%20%20%20%20%20%29%0A%20%20%20%20%29%20AS%20%3FsectorAbbrev%0A%20%20%29%0A%0A%20%20OPTIONAL%20%7B%0A%20%20%20%20%3Fapplication%20wdt%3AP571%20%3Fdate.%0A%20%20%20%20BIND%28YEAR%28%3Fdate%29%20AS%20%3Fyear%29%0A%20%20%7D%0A%0A%20%20OPTIONAL%20%7B%20%3Fapplication%20wdt%3AP17%20%3Fcountry.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fapplication%20wdt%3AP18%20%3Fimage.%20%7D%0A%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22en%22.%20%7D%0A%7D%0ALIMIT%2080%0A" width="900" height="500"></iframe>
+        </div>
+    </div>
+</body>
+</html>
