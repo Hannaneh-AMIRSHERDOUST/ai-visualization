@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Exercice 2.4 — Visualisations interactives</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    body{
+      font-family: system-ui, Arial, sans-serif;
+      margin: 0;
+      background: #ffffff;
+      color: #111;
+      line-height: 1.5;
+    }
+    main{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 40px;
+    }
+    h1{
+      margin:0 0 10px;
+    }
+    p{
+      margin:0;
+      color:#444;
+    }
+    section{
+      margin-top: 24px;
+      border: none;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    section:hover{
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    }
+    header.section{
+      padding: 16px 20px;
+      border-bottom: 1px solid #e5e5e5;
+      background:#fafafa;
+    }
+    header.section h2{
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    header.section .note{
+      margin-top: 6px;
+      font-size: 13px;
+      color:#666;
+    }
+    iframe{
+      width: 100%;
+      height: 650px;
+      border: 0;
+      display:block;
+      background:#fff;
+    }
+
+    /* Galerie images */
+    .gallery-wrap{ padding: 16px 18px; }
+    .gallery{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+    }
+    .card{
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .card:hover{
+      transform: translateY(-8px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+    .card img{
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      display:block;
+    }
+    .card .meta{
+      padding: 10px;
+      font-size: 13px;
+      color:#222;
+    }
+
+    /* Lightbox */
+    .lightbox{
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,.75);
+      padding: 18px;
+      z-index: 999;
+    }
+    .lightbox.open{ display:flex; }
+    .lightbox img{
+      max-width: min(1000px, 100%);
+      max-height: 80vh;
+      border-radius: 8px;
+      background:#fff;
+    }
+
+    footer{
+      margin-top: 28px;
+      font-size: 13px;
+      color:#666;
+      text-align: center;
+    }
+    code{
+      background: #f1f1f1;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+
+<body>
+<main>
+  <h1>Exercice 2.4 — Visualisations interactives</h1>
+  <p>
+   Noms et prenoms : Litissia Henkous __ Hannaneh Amirsherdoust
+  </p>
+
+  <!-- ===================== 1) WORDTREE (CORRIGÉ) ===================== -->
+  <section>
+    <header class="section">
+      <h2>1) Visualisation interactive de textes — WordTree</h2>
+      <div class="note">
+        Exploration des structures de phrases à partir d’un mot fréquent du corpus.
+      </div>
+    </header>
+
+    <!-- ✅ WordTree corrigé (préfixe valide + paramètres sûrs) -->
+    <iframe
+      src="https://www.jasondavies.com/wordtree/?source=873de2142d8ecf376c6cd12e613678ba&prefix=la&width=960&height=600"
+      title="WordTree — visualisation de textes">
+    </iframe>
+  </section>
+
+  <!-- ===================== 2) CIRRUS (NUAGE DE MOTS) ===================== -->
+  <section>
+    <header class="section">
+      <h2>2) Visualisation interactive de textes — Nuage de mots</h2>
+      <div class="note">
+        Nuage de mots (Cirrus) généré avec Voyant Tools à partir du corpus.
+      </div>
+    </header>
+
+    <iframe
+      style="width:100%; height:400px;"
+      src="https://voyant-tools.org/tool/Cirrus/?corpus=bdcc591c9f2f139fdd26f496078109cd"
+      title="Voyant Tools — Cirrus">
+    </iframe>
+  </section>
+
+  <!-- ===================== 3) IMAGES ===================== -->
+  <section>
+    <header class="section">
+      <h2>3) Visualisation interactive d’images</h2>
+      <div class="note">
+        Galerie d’images interactive : cliquer sur une image pour l’agrandir.
+      </div>
+    </header>
+
+    <div class="gallery-wrap">
+      <div class="gallery" id="gallery"></div>
+    </div>
+  </section>
+
+  <footer>
+    Publication via <code>GitHub Pages</code> — fermeture d’une image : touche <code>Esc</code>.
+  </footer>
+</main>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lb">
+  <img id="lbImg" alt="">
+</div>
+
+<script>
+  /* Mets tes images dans le dossier /images */
+  const IMAGES = [
+    { name: "Plage", file: "images/1.jpg" },
+    { name: "Dunes", file: "images/2.jpg" },
+    { name: "Côte rocheuse", file: "images/3.jpg" },
+    { name: "Mer", file: "images/4.jpg" }
+  ];
+
+  const gallery = document.getElementById("gallery");
+  const lb = document.getElementById("lb");
+  const lbImg = document.getElementById("lbImg");
+
+  gallery.innerHTML = IMAGES.map((img,i)=>`
+    <div class="card" data-i="${i}">
+      <img src="${img.file}" alt="${img.name}">
+      <div class="meta"><strong>${img.name}</strong></div>
+    </div>
+  `).join("");
+
+  gallery.addEventListener("click", (e)=>{
+    const card = e.target.closest(".card");
+    if(!card) return;
+    const img = IMAGES[Number(card.dataset.i)];
+    lbImg.src = img.file;
+    lbImg.alt = img.name;
+    lb.classList.add("open");
+  });
+
+  lb.addEventListener("click", ()=> lb.classList.remove("open"));
+  document.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape") lb.classList.remove("open");
+  });
+</script>
+
+</body>
+</html>
