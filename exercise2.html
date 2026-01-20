@@ -1,665 +1,228 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exercise 2 — AI Visualizations</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+  <meta charset="utf-8" />
+  <title>Exercice 2.4 — Visualisations interactives</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <style>
+    body{
+      font-family: system-ui, Arial, sans-serif;
+      margin: 0;
+      background: #ffffff;
+      color: #111;
+      line-height: 1.5;
+    }
+    main{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 40px;
+    }
+    h1{
+      margin:0 0 10px;
+    }
+    p{
+      margin:0;
+      color:#444;
+    }
+    section{
+      margin-top: 24px;
+      border: none;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    section:hover{
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    }
+    header.section{
+      padding: 16px 20px;
+      border-bottom: 1px solid #e5e5e5;
+      background:#fafafa;
+    }
+    header.section h2{
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    header.section .note{
+      margin-top: 6px;
+      font-size: 13px;
+      color:#666;
+    }
+    iframe{
+      width: 100%;
+      height: 650px;
+      border: 0;
+      display:block;
+      background:#fff;
+    }
 
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #000000 0%, #1a1a2e 50%, #0f3460 100%);
-            min-height: 100vh;
-            padding: 40px 20px;
-            color: #fff;
-            overflow-x: hidden;
-        }
+    /* Galerie images */
+    .gallery-wrap{ padding: 16px 18px; }
+    .gallery{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+    }
+    .card{
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .card:hover{
+      transform: translateY(-8px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+    .card img{
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      display:block;
+    }
+    .card .meta{
+      padding: 10px;
+      font-size: 13px;
+      color:#222;
+    }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            animation: fadeIn 1s ease-in;
-        }
+    /* Lightbox */
+    .lightbox{
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,.75);
+      padding: 18px;
+      z-index: 999;
+    }
+    .lightbox.open{ display:flex; }
+    .lightbox img{
+      max-width: min(1000px, 100%);
+      max-height: 80vh;
+      border-radius: 8px;
+      background:#fff;
+    }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 60px;
-            position: relative;
-        }
-
-        .exercise {
-            font-size: 16px;
-            font-weight: 300;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-            opacity: 0.9;
-            animation: glitch 3s infinite, fadeSlide 1s ease-in;
-            position: relative;
-        }
-
-        @keyframes glitch {
-            0%, 90%, 100% { 
-                transform: translateX(0);
-                text-shadow: 0 0 10px rgba(255,255,255,0.5);
-            }
-            92% { 
-                transform: translateX(-2px);
-                text-shadow: -2px 0 10px rgba(255,0,255,0.8), 2px 0 10px rgba(0,255,255,0.8);
-            }
-            94% { 
-                transform: translateX(2px);
-                text-shadow: 2px 0 10px rgba(255,0,255,0.8), -2px 0 10px rgba(0,255,255,0.8);
-            }
-        }
-
-        @keyframes fadeSlide {
-            from { 
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to { 
-                opacity: 0.9;
-                transform: translateY(0);
-            }
-        }
-
-        h1 {
-            font-size: 4rem;
-            font-weight: 700;
-            margin-bottom: 15px;
-            text-shadow: 
-                0 0 10px rgba(255,255,255,0.5),
-                0 0 20px rgba(255,255,255,0.3),
-                0 10px 30px rgba(0,0,0,0.5);
-            background: linear-gradient(45deg, #fff, #a8edea, #fed6e3, #fff);
-            background-size: 300% 300%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: gradientShift 5s ease infinite, float3D 3s ease-in-out infinite;
-            transform-style: preserve-3d;
-            perspective: 1000px;
-            cursor: pointer;
-            transition: all 0.5s;
-        }
-
-        h1:hover {
-            transform: rotateY(10deg) rotateX(10deg) scale(1.1);
-            text-shadow: 
-                0 0 20px rgba(255,255,255,0.8),
-                0 0 40px rgba(255,255,255,0.5),
-                0 20px 50px rgba(0,0,0,0.8);
-        }
-
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
-        @keyframes float3D {
-            0%, 100% { 
-                transform: translateY(0px) rotateX(0deg);
-            }
-            50% { 
-                transform: translateY(-20px) rotateX(5deg);
-            }
-        }
-
-        .authors {
-            font-size: 18px;
-            font-weight: 300;
-            opacity: 0.95;
-            letter-spacing: 1px;
-            animation: colorWave 6s ease-in-out infinite;
-            background: linear-gradient(90deg, #fff, #ffd700, #fff, #00d4ff, #fff);
-            background-size: 400% 100%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 0 0 20px rgba(255,255,255,0.3);
-        }
-
-        @keyframes colorWave {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
-        .section {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 30px;
-            padding: 40px;
-            margin-bottom: 40px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: transform 0.3s ease;
-        }
-
-        .section:hover {
-            transform: translateY(-5px);
-        }
-
-        h2 {
-            font-size: 2.5rem;
-            margin-bottom: 30px;
-            text-align: center;
-            font-weight: 600;
-            text-shadow: 
-                0 0 15px rgba(255,255,255,0.4),
-                0 5px 20px rgba(0,0,0,0.3);
-            background: linear-gradient(90deg, #fff, #ffd89b, #19547b, #fff);
-            background-size: 200% 200%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: slideGradient 4s linear infinite;
-            transform-style: preserve-3d;
-            transition: all 0.4s;
-            cursor: pointer;
-            position: relative;
-        }
-
-        h2:hover {
-            transform: scale(1.05) translateZ(30px);
-            text-shadow: 
-                0 0 30px rgba(255,255,255,0.8),
-                0 10px 40px rgba(0,0,0,0.6);
-            animation: slideGradient 2s linear infinite, pulse 0.5s ease-in-out;
-        }
-
-        h2::before {
-            content: attr(data-text);
-            position: absolute;
-            left: 0;
-            top: 0;
-            z-index: -1;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            transform: translateZ(-20px);
-            opacity: 0.3;
-            filter: blur(3px);
-        }
-
-        @keyframes slideGradient {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 200% 50%; }
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1.05) translateZ(30px); }
-            50% { transform: scale(1.1) translateZ(40px); }
-        }
-
-        #bubbleChart {
-            width: 100%;
-            height: 700px;
-            position: relative;
-            cursor: grab;
-        }
-
-        #bubbleChart:active {
-            cursor: grabbing;
-        }
-
-        #bubbleChart:active {
-            cursor: grabbing;
-        }
-
-        .tooltip {
-            position: absolute;
-            padding: 15px 20px;
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            border-radius: 12px;
-            pointer-events: none;
-            font-size: 14px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: 1000;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin: 30px 0;
-        }
-
-        .gallery-item {
-            position: relative;
-            overflow: hidden;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            aspect-ratio: 4/3;
-            cursor: pointer;
-            background: rgba(255,255,255,0.05);
-        }
-
-        .gallery-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1));
-            opacity: 0;
-            transition: opacity 0.5s;
-            z-index: 1;
-        }
-
-        .gallery-item:hover::before {
-            opacity: 1;
-        }
-
-        .gallery-item:hover {
-            transform: scale(1.08) rotate(2deg);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-
-        .gallery-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            transition: transform 0.5s;
-        }
-
-        .gallery-item:hover img {
-            transform: scale(1.1);
-        }
-
-        .gallery-item .placeholder {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            font-size: 22px;
-            font-weight: 600;
-            text-align: center;
-            padding: 30px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .gallery-item .placeholder::before {
-            content: '🤖';
-            position: absolute;
-            font-size: 100px;
-            opacity: 0.1;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-
-        .gallery-title {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-            padding: 20px;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
-            z-index: 2;
-        }
-
-        .gallery-item:hover .gallery-title {
-            transform: translateY(0);
-        }
-
-        .bubble {
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .bubble:hover {
-            opacity: 0.9;
-        }
-
-        .bubble circle {
-            transition: all 0.3s;
-        }
-
-        .bubble-text {
-            fill: white;
-            font-size: 14px;
-            font-weight: 600;
-            text-anchor: middle;
-            pointer-events: none;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .legend {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 30px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(255,255,255,0.15);
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-
-        .legend-item:hover {
-            background: rgba(255,255,255,0.25);
-            transform: scale(1.05);
-        }
-
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        }
-    </style>
+    footer{
+      margin-top: 28px;
+      font-size: 13px;
+      color:#666;
+      text-align: center;
+    }
+    code{
+      background: #f1f1f1;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <div class="header">
-            <p class="exercise">Exercise 2</p>
-            <h1>AI Visualizations</h1>
-            <p class="authors">Litissia Henkous et Hannaneh Amirsherdoust</p>
-        </div>
+<main>
+  <h1>Exercice 2.4 — Visualisations interactives</h1>
+  <p>
+   Noms et prenoms : Litissia Henkous __ Hannaneh Amirsherdoust
+  </p>
 
-        <div class="section">
-            <h2 data-text="🚀 Interactive Bubble Chart">🚀 Interactive Bubble Chart</h2>
-            <div id="bubbleChart"></div>
-            <div class="legend" id="legend"></div>
-        </div>
+  <!-- ===================== 1) WORDTREE (CORRIGÉ) ===================== -->
+  <section>
+    <header class="section">
+      <h2>1) Visualisation interactive de textes — WordTree</h2>
+      <div class="note">
+        Exploration des structures de phrases à partir d’un mot fréquent du corpus.
+      </div>
+    </header>
 
-        <div class="section">
-            <h2 data-text="✨ AI Applications Gallery">✨ AI Applications Gallery</h2>
-            <div class="gallery" id="gallery"></div>
-        </div>
+    <!-- ✅ WordTree corrigé (préfixe valide + paramètres sûrs) -->
+    <iframe
+      src="https://www.jasondavies.com/wordtree/?source=873de2142d8ecf376c6cd12e613678ba&prefix=la&width=960&height=600"
+      title="WordTree — visualisation de textes">
+    </iframe>
+  </section>
+
+  <!-- ===================== 2) CIRRUS (NUAGE DE MOTS) ===================== -->
+  <section>
+    <header class="section">
+      <h2>2) Visualisation interactive de textes — Nuage de mots</h2>
+      <div class="note">
+        Nuage de mots (Cirrus) généré avec Voyant Tools à partir du corpus.
+      </div>
+    </header>
+
+    <iframe
+      style="width:100%; height:400px;"
+      src="https://voyant-tools.org/tool/Cirrus/?corpus=bdcc591c9f2f139fdd26f496078109cd"
+      title="Voyant Tools — Cirrus">
+    </iframe>
+  </section>
+
+  <!-- ===================== 3) IMAGES ===================== -->
+  <section>
+    <header class="section">
+      <h2>3) Visualisation interactive d’images</h2>
+      <div class="note">
+        Galerie d’images interactive : cliquer sur une image pour l’agrandir.
+      </div>
+    </header>
+
+    <div class="gallery-wrap">
+      <div class="gallery" id="gallery"></div>
     </div>
+  </section>
 
-    <div class="tooltip" id="tooltip"></div>
+  <footer>
+    Publication via <code>GitHub Pages</code> — fermeture d’une image : touche <code>Esc</code>.
+  </footer>
+</main>
 
-    <script>
-        // Dataset for bubble chart
-        const aiData = [
-            { application: "ChatBot", sector: "Technology" },
-            { application: "ChatBot", sector: "AI" },
-            { application: "ChatBot", sector: "Automation" },
-            { application: "ChatBot", sector: "Software Dev" },
-            { application: "ChatBot", sector: "Software Industry" },
-            { application: "ChatBot", sector: "Customer Service" },
-            { application: "Lyro", sector: "Technology" },
-            { application: "Lyro", sector: "AI" },
-            { application: "Lyro", sector: "Software Dev" },
-            { application: "Lyro", sector: "Software Industry" },
-            { application: "Lyro", sector: "Customer Service" },
-            { application: "Lyro", sector: "SaaS" },
-            { application: "Lyro", sector: "Customer Support" },
-            { application: "AI-powered enterprise system", sector: "AI" },
-            { application: "AI-powered enterprise system", sector: "Infrastructure" },
-            { application: "AI-powered enterprise system", sector: "Enterprise Software" },
-            { application: "DualEntry", sector: "ERP" },
-            { application: "Tidio", sector: "Technology" },
-            { application: "Tidio", sector: "AI" },
-            { application: "Tidio", sector: "Software Dev" },
-            { application: "Tidio", sector: "Software Industry" },
-            { application: "Tidio", sector: "Customer Service" },
-            { application: "Tidio", sector: "SaaS" },
-            { application: "Tidio", sector: "Customer Support" },
-            { application: "Revamply", sector: "AI" },
-            { application: "Revamply", sector: "Automation" },
-            { application: "Revamply", sector: "Software Industry" },
-            { application: "Revamply", sector: "Gen. Engine Opt." }
-        ];
+<!-- Lightbox -->
+<div class="lightbox" id="lb">
+  <img id="lbImg" alt="">
+</div>
 
-        // Dataset for image gallery
-        const aiImages = [
-            { src: "chatbot.jpg", title: "ChatBot" },
-            { src: "lyro.jpg", title: "Lyro" },
-            { src: "ai_powered_enterprise.jpg", title: "AI-powered enterprise system" },
-            { src: "dualentry.jpg", title: "DualEntry" },
-            { src: "tidio.webp", title: "Tidio" },
-            { src: "Revamply.webp", title: "Revamply" }
-        ];
+<script>
+  /* Mets tes images dans le dossier /images */
+  const IMAGES = [
+    { name: "Plage", file: "images/1.jpg" },
+    { name: "Dunes", file: "images/2.jpg" },
+    { name: "Côte rocheuse", file: "images/3.jpg" },
+    { name: "Mer", file: "images/4.jpg" }
+  ];
 
-        // Create interactive bubble chart
-        function createBubbleChart() {
-            const sectorCounts = d3.rollup(
-                aiData,
-                v => v.length,
-                d => d.sector
-            );
+  const gallery = document.getElementById("gallery");
+  const lb = document.getElementById("lb");
+  const lbImg = document.getElementById("lbImg");
 
-            const data = Array.from(sectorCounts, ([sector, count]) => ({
-                name: sector,
-                value: count
-            }));
+  gallery.innerHTML = IMAGES.map((img,i)=>`
+    <div class="card" data-i="${i}">
+      <img src="${img.file}" alt="${img.name}">
+      <div class="meta"><strong>${img.name}</strong></div>
+    </div>
+  `).join("");
 
-            const width = document.getElementById('bubbleChart').clientWidth;
-            const height = 700;
+  gallery.addEventListener("click", (e)=>{
+    const card = e.target.closest(".card");
+    if(!card) return;
+    const img = IMAGES[Number(card.dataset.i)];
+    lbImg.src = img.file;
+    lbImg.alt = img.name;
+    lb.classList.add("open");
+  });
 
-            const color = d3.scaleOrdinal()
-                .domain(data.map(d => d.name))
-                .range(['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52B788', '#E07A5F', '#3D5A80']);
+  lb.addEventListener("click", ()=> lb.classList.remove("open"));
+  document.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape") lb.classList.remove("open");
+  });
+</script>
 
-            const svg = d3.select("#bubbleChart")
-                .append("svg")
-                .attr("width", width)
-                .attr("height", height);
-
-            const tooltip = d3.select("#tooltip");
-
-            // Create force simulation
-            const simulation = d3.forceSimulation(data)
-                .force("charge", d3.forceManyBody().strength(5))
-                .force("center", d3.forceCenter(width / 2, height / 2))
-                .force("collision", d3.forceCollide().radius(d => Math.sqrt(d.value) * 25 + 10));
-
-            const nodes = svg.selectAll(".bubble")
-                .data(data)
-                .enter()
-                .append("g")
-                .attr("class", "bubble")
-                .call(d3.drag()
-                    .on("start", dragstarted)
-                    .on("drag", dragged)
-                    .on("end", dragended));
-
-            // Add circles with animation
-            nodes.append("circle")
-                .attr("r", 0)
-                .attr("fill", d => color(d.name))
-                .attr("stroke", "#fff")
-                .attr("stroke-width", 3)
-                .style("filter", "drop-shadow(0 4px 10px rgba(0,0,0,0.3))")
-                .on("mouseover", function(event, d) {
-                    d3.select(this)
-                        .transition()
-                        .duration(200)
-                        .attr("stroke-width", 5)
-                        .style("filter", "drop-shadow(0 8px 20px rgba(0,0,0,0.5))");
-                    
-                    tooltip
-                        .style("opacity", 1)
-                        .html(`<strong>${d.name}</strong><br>Applications: ${d.value}`)
-                        .style("left", (event.pageX + 15) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", function() {
-                    d3.select(this)
-                        .transition()
-                        .duration(200)
-                        .attr("stroke-width", 3)
-                        .style("filter", "drop-shadow(0 4px 10px rgba(0,0,0,0.3))");
-                    
-                    tooltip.style("opacity", 0);
-                })
-                .on("mousemove", function(event) {
-                    tooltip
-                        .style("left", (event.pageX + 15) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("click", function(event, d) {
-                    // Pulse animation on click
-                    d3.select(this)
-                        .transition()
-                        .duration(300)
-                        .attr("r", d => Math.sqrt(d.value) * 30)
-                        .transition()
-                        .duration(300)
-                        .attr("r", d => Math.sqrt(d.value) * 25);
-                })
-                .transition()
-                .duration(1000)
-                .delay((d, i) => i * 100)
-                .attr("r", d => Math.sqrt(d.value) * 25);
-
-            // Add text labels
-            nodes.append("text")
-                .attr("class", "bubble-text")
-                .attr("dy", "-0.3em")
-                .style("opacity", 0)
-                .text(d => d.name)
-                .transition()
-                .duration(1000)
-                .delay((d, i) => i * 100 + 500)
-                .style("opacity", 1);
-
-            nodes.append("text")
-                .attr("class", "bubble-text")
-                .attr("dy", "1em")
-                .attr("font-size", "18px")
-                .style("opacity", 0)
-                .text(d => d.value)
-                .transition()
-                .duration(1000)
-                .delay((d, i) => i * 100 + 500)
-                .style("opacity", 1);
-
-            simulation.on("tick", () => {
-                nodes.attr("transform", d => `translate(${d.x},${d.y})`);
-            });
-
-            function dragstarted(event, d) {
-                if (!event.active) simulation.alphaTarget(0.3).restart();
-                d.fx = d.x;
-                d.fy = d.y;
-            }
-
-            function dragged(event, d) {
-                d.fx = event.x;
-                d.fy = event.y;
-            }
-
-            function dragended(event, d) {
-                if (!event.active) simulation.alphaTarget(0);
-                d.fx = null;
-                d.fy = null;
-            }
-
-            // Create legend
-            const legend = d3.select("#legend");
-            data.forEach(d => {
-                const item = legend.append("div")
-                    .attr("class", "legend-item")
-                    .on("click", function() {
-                        // Highlight corresponding bubble
-                        svg.selectAll(".bubble")
-                            .filter(b => b.name === d.name)
-                            .select("circle")
-                            .transition()
-                            .duration(300)
-                            .attr("r", Math.sqrt(d.value) * 30)
-                            .transition()
-                            .duration(300)
-                            .attr("r", Math.sqrt(d.value) * 25);
-                    });
-
-                item.append("div")
-                    .attr("class", "legend-color")
-                    .style("background-color", color(d.name));
-
-                item.append("span")
-                    .text(d.name);
-            });
-        }
-
-        // Create image gallery
-        function createGallery() {
-            const gallery = document.getElementById('gallery');
-
-            aiImages.forEach((image, index) => {
-                const item = document.createElement('div');
-                item.className = 'gallery-item';
-                item.style.animationDelay = `${index * 0.1}s`;
-
-                const img = document.createElement('img');
-                img.src = image.src;
-                img.alt = image.title;
-
-                img.onerror = function() {
-                    this.style.display = 'none';
-                    const placeholder = document.createElement('div');
-                    placeholder.className = 'placeholder';
-                    placeholder.textContent = image.title;
-                    item.appendChild(placeholder);
-                };
-
-                const title = document.createElement('div');
-                title.className = 'gallery-title';
-                title.textContent = image.title;
-
-                item.appendChild(img);
-                item.appendChild(title);
-                gallery.appendChild(item);
-            });
-        }
-
-        // Initialize
-        createBubbleChart();
-        createGallery();
-
-        // Recreate chart on window resize
-        let resizeTimer;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                document.getElementById('bubbleChart').innerHTML = '';
-                document.getElementById('legend').innerHTML = '';
-                createBubbleChart();
-            }, 250);
-        });
-    </script>
 </body>
 </html>
