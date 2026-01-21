@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive IMDb Movie Visualization</title>
+    
+    <!-- P5.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+        
+        /* Title container at top-left */
+        #title-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        #title-container h1 {
+            font-size: 28px;
+            color: #2196F3;
+            margin-bottom: 5px;
+        }
+        
+        #title-container p {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* Controls panel at top-right */
+        #controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            min-width: 280px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .control-group select,
+        .control-group input[type="range"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .control-group select:focus,
+        .control-group input[type="range"]:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+        
+        #year-value {
+            display: inline-block;
+            margin-left: 10px;
+            color: #2196F3;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        #upload-btn {
+            width: 100%;
+            padding: 10px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        #upload-btn:hover {
+            background: #1976D2;
+        }
+        
+        #csv-input {
+            display: none;
+        }
+        
+        /* Legend at bottom-left */
+        #legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+        }
+        
+        #legend h3 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #333;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 6px 0;
+            font-size: 13px;
+        }
+        
+        .legend-color {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Tooltip */
+        #tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            pointer-events: none;
+            display: none;
+            z-index: 2000;
+            max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        #tooltip .title {
+            font-weight: bold;
+            font-size: 15px;
+            margin-bottom: 8px;
+            color: #FFD700;
+        }
+        
+        #tooltip .info {
+            margin: 4px 0;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <!-- Title -->
+    <div id="title-container">
+        <h1>🎬 IMDb Movie Cloud</h1>
+        <p>Interactive Data Visualization</p>
+    </div>
+    
+    <!-- Controls -->
+    <div id="controls">
+        <div class="control-group">
+            <label for="size-metric">Circle Size:</label>
+            <select id="size-metric">
+                <option value="revenue">Revenue (Millions)</option>
+                <option value="rating">Rating</option>
+                <option value="metascore">Metascore</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label for="year-slider">
+                Filter by Year: <span id="year-value">All Years</span>
+            </label>
+            <input type="range" id="year-slider" min="0" max="0" value="0">
+        </div>
+        
+        <div class="control-group">
+            <button id="upload-btn" onclick="document.getElementById('csv-input').click()">
+                📁 Upload CSV File
+            </button>
+            <input type="file" id="csv-input" accept=".csv">
+        </div>
+    </div>
+    
+    <!-- Legend -->
+    <div id="legend">
+        <h3>Genres</h3>
+        <div id="legend-content"></div>
+    </div>
+    
+    <!-- Tooltip -->
+    <div id="tooltip"></div>
+    
+    <script>
+        // ============================================
+        // GLOBAL VARIABLES
+        // ============================================
+        
+        let movies = [];
+        let filteredMovies = [];
+        let circles = [];
+        let genreColors = {};
+        let genreCenters = {};
+        let sizeMetric = 'revenue';
+        let yearFilter = 0;
+        let minYear = 0;
+        let maxYear = 0;
+        let hoveredCircle = null;
+        let time = 0; // For animation
+        
+        // ============================================
+        // P5.JS PRELOAD - Load CSV before setup
+        // ============================================
+        
+        function preload() {
+            loadTable('IMDB-Movie-Data.csv', 'csv', 'header', (table) => {
+                parseTableData(table);
+            });
+        }
+        
+        // ============================================
+        // PARSE TABLE DATA
+        // ============================================
+        
+        function parseTableData(table) {
+            movies = [];
+            let years = [];
+            
+            for (let i = 0; i < table.getRowCount(); i++) {
+                try {
+                    const movie = {
+                        rank: table.getNum(i, 'Rank'),
+                        title: table.getString(i, 'Title'),
+                        genre: table.getString(i, 'Genre'),
+                        director: table.getString(i, 'Director'),
+                        year: table.getNum(i, 'Year'),
+                        rating: table.getNum(i, 'Rating'),
+                        revenue: table.getNum(i, 'Revenue (Millions)') || 0,
+                        metascore: table.getNum(i, 'Metascore') || 0
+                    };
+                    
+                    movie.primaryGenre = movie.genre.split(',')[0].trim();
+                    movies.push(movie);
+                    years.push(movie.year);
+                } catch (e) {
+                    console.log('Error parsing row', i);
+                }
+            }
+            
+            minYear = Math.min(...years);
+            maxYear = Math.max(...years);
+            filteredMovies = [...movies];
+            
+            console.log('✓ Loaded', movies.length, 'movies');
+        }
+        
+        // ============================================
+        // P5.JS SETUP
+        // ============================================
+        
+        function setup() {
+            createCanvas(windowWidth, windowHeight, WEBGL);
+            
+            // Assign colors to genres
+            assignGenreColors();
+            
+            // Calculate genre cluster centers
+            calculateGenreCenters();
+            
+            // Create legend
+            createLegend();
+            
+            // Setup controls
+            setupControls();
+            
+            // Position circles
+            positionCircles();
+        }
+        
+        // ============================================
+        // ASSIGN COLORS TO GENRES
+        // ============================================
+        
+        function assignGenreColors() {
+            const genres = [...new Set(movies.map(m => m.primaryGenre))].sort();
+            const hueStep = 360 / genres.length;
+            
+            genres.forEach((genre, i) => {
+                const hue = (i * hueStep) % 360;
+                genreColors[genre] = { h: hue, s: 70, b: 90 };
+            });
+        }
+        
+        // ============================================
+        // CALCULATE GENRE CLUSTER CENTERS
+        // ============================================
+        
+        function calculateGenreCenters() {
+            const genres = Object.keys(genreColors);
+            const numGenres = genres.length;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = min(width, height) * 0.28;
+            
+            genres.forEach((genre, i) => {
+                const angle = (TWO_PI / numGenres) * i - HALF_PI;
+                genreCenters[genre] = {
+                    x: centerX + cos(angle) * radius,
+                    y: centerY + sin(angle) * radius
+                };
+            });
+        }
+        
+        // ============================================
+        // CREATE LEGEND
+        // ============================================
+        
+        function createLegend() {
+            const legendContent = document.getElementById('legend-content');
+            legendContent.innerHTML = '';
+            
+            const genres = Object.keys(genreColors).sort();
+            
+            genres.forEach(genre => {
+                const item = document.createElement('div');
+                item.className = 'legend-item';
+                
+                const colorBox = document.createElement('div');
+                colorBox.className = 'legend-color';
+                const c = genreColors[genre];
+                colorBox.style.background = `hsl(${c.h}, ${c.s}%, ${c.b}%)`;
+                
+                const label = document.createElement('span');
+                label.textContent = genre;
+                
+                item.appendChild(colorBox);
+                item.appendChild(label);
+                legendContent.appendChild(item);
+            });
+        }
+        
+        // ============================================
+        // SETUP CONTROLS
+        // ============================================
+        
+        function setupControls() {
+            // Size metric dropdown
+            const sizeSelect = document.getElementById('size-metric');
+            sizeSelect.addEventListener('change', (e) => {
+                sizeMetric = e.target.value;
+                positionCircles();
+            });
+            
+            // Year slider
+            const yearSlider = document.getElementById('year-slider');
+            yearSlider.min = minYear;
+            yearSlider.max = maxYear;
+            yearSlider.value = minYear;
+            
+            yearSlider.addEventListener('input', (e) => {
+                yearFilter = parseInt(e.target.value);
+                updateYearDisplay();
+                filterByYear();
+                positionCircles();
+            });
+            
+            updateYearDisplay();
+            
+            // CSV upload
+            const csvInput = document.getElementById('csv-input');
+            csvInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    loadTable(file, 'csv', 'header', (table) => {
+                        parseTableData(table);
+                        assignGenreColors();
+                        calculateGenreCenters();
+                        createLegend();
+                        yearSlider.min = minYear;
+                        yearSlider.max = maxYear;
+                        yearSlider.value = minYear;
+                        yearFilter = minYear;
+                        updateYearDisplay();
+                        filterByYear();
+                        positionCircles();
+                    });
+                }
+            });
+        }
+        
+        // ============================================
+        // UPDATE YEAR DISPLAY
+        // ============================================
+        
+        function updateYearDisplay() {
+            const display = document.getElementById('year-value');
+            display.textContent = yearFilter <= minYear ? 'All Years' : `${yearFilter}+`;
+        }
+        
+        // ============================================
+        // FILTER BY YEAR
+        // ============================================
+        
+        function filterByYear() {
+            if (yearFilter <= minYear) {
+                filteredMovies = [...movies];
+            } else {
+                filteredMovies = movies.filter(m => m.year >= yearFilter);
+            }
+        }
+        
+        // ============================================
+        // POSITION CIRCLES WITH CLUSTERING
+        // ============================================
+        
+        function positionCircles() {
+            circles = [];
+            
+            filteredMovies.forEach(movie => {
+                // Calculate size based on metric
+                let value, maxValue, minValue;
+                
+                if (sizeMetric === 'revenue') {
+                    value = movie.revenue;
+                    maxValue = Math.max(...filteredMovies.map(m => m.revenue));
+                    minValue = 0;
+                } else if (sizeMetric === 'rating') {
+                    value = movie.rating;
+                    maxValue = 10;
+                    minValue = 0;
+                } else {
+                    value = movie.metascore || 0;
+                    maxValue = 100;
+                    minValue = 0;
+                }
+                
+                const size = map(value, minValue, maxValue, 30, 90);
+                
+                // Get genre center
+                const center = genreCenters[movie.primaryGenre];
+                
+                // Try to position near genre center
+                let x, y, placed = false, attempts = 0;
+                
+                while (!placed && attempts < 150) {
+                    const angle = random(TWO_PI);
+                    const distance = randomGaussian(0, 100);
+                    
+                    x = center.x + cos(angle) * abs(distance);
+                    y = center.y + sin(angle) * abs(distance);
+                    
+                    // Keep within bounds
+                    x = constrain(x, size/2 + 10, width - size/2 - 10);
+                    y = constrain(y, size/2 + 10, height - size/2 - 10);
+                    
+                    // Check overlaps
+                    let overlaps = false;
+                    for (let c of circles) {
+                        const d = dist(x, y, c.x, c.y);
+                        if (d < (size + c.size) / 2 + 4) {
+                            overlaps = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!overlaps) placed = true;
+                    attempts++;
+                }
+                
+                // If couldn't place, use random position
+                if (!placed) {
+                    const angle = random(TWO_PI);
+                    const distance = random(150);
+                    x = center.x + cos(angle) * distance;
+                    y = center.y + sin(angle) * distance;
+                    x = constrain(x, size/2 + 10, width - size/2 - 10);
+                    y = constrain(y, size/2 + 10, height - size/2 - 10);
+                }
+                
+                circles.push({
+                    x: x,
+                    y: y,
+                    size: size,
+                    movie: movie,
+                    offsetX: random(-2, 2),
+                    offsetY: random(-2, 2),
+                    speed: random(0.5, 1.5),
+                    vx: random(-0.5, 0.5),  // Velocity X for bouncing
+                    vy: random(-0.5, 0.5)   // Velocity Y for bouncing
+                });
+            });
+        }
+        
+        // ============================================
+        // P5.JS DRAW LOOP
+        // ============================================
+        
+        function draw() {
+            // Dark background
+            background(20);
+            
+            // Add 3D lighting
+            ambientLight(100);
+            directionalLight(255, 255, 255, 0.25, 0.25, -1);
+            pointLight(255, 200, 200, 200, -200, 300);
+            
+            // Increment time for animation
+            time += 0.01;
+            
+            // Reset hovered
+            hoveredCircle = null;
+            
+            // Draw spheres
+            circles.forEach((circle, i) => {
+                // Update position with bounce physics
+                circle.x += circle.vx;
+                circle.y += circle.vy;
+                
+                // Bounce off edges
+                if (circle.x < circle.size/2 || circle.x > width - circle.size/2) {
+                    circle.vx *= -1;
+                    circle.x = constrain(circle.x, circle.size/2, width - circle.size/2);
+                }
+                if (circle.y < circle.size/2 || circle.y > height - circle.size/2) {
+                    circle.vy *= -1;
+                    circle.y = constrain(circle.y, circle.size/2, height - circle.size/2);
+                }
+                
+                // Floating animation with Z-axis depth
+                const floatX = circle.x + sin(time * circle.speed + i) * circle.offsetX;
+                const floatY = circle.y + cos(time * circle.speed + i) * circle.offsetY;
+                const floatZ = sin(time * circle.speed * 0.7 + i * 0.5) * 30;
+                
+                // Convert to WEBGL coordinates (origin at center)
+                const x3d = floatX - width/2;
+                const y3d = floatY - height/2;
+                
+                // Check hover (convert mouse coords)
+                const mouseX3d = mouseX - width/2;
+                const mouseY3d = mouseY - height/2;
+                const d = dist(mouseX3d, mouseY3d, x3d, y3d);
+                const isHovered = d < circle.size / 2;
+                
+                if (isHovered) hoveredCircle = circle;
+                
+                // Get color
+                const gc = genreColors[circle.movie.primaryGenre];
+                
+                // Draw 3D sphere
+                push();
+                translate(x3d, y3d, floatZ);
+                
+                // Convert HSB to RGB for proper color display
+                colorMode(HSB, 360, 100, 100);
+                const sphereColor = color(gc.h, gc.s, gc.b);
+                colorMode(RGB, 255);
+                
+                if (isHovered) {
+                    // Bright colored sphere when hovered
+                    fill(sphereColor);
+                    ambientMaterial(red(sphereColor), green(sphereColor), blue(sphereColor));
+                    specularMaterial(255, 255, 255);
+                    shininess(50);
+                    sphere(circle.size * 0.65);
+                } else {
+                    // Normal colored sphere
+                    fill(sphereColor);
+                    ambientMaterial(red(sphereColor), green(sphereColor), blue(sphereColor));
+                    specularMaterial(200, 200, 200);
+                    shininess(20);
+                    sphere(circle.size * 0.5);
+                }
+                
+                pop();
+            });
+            
+            // Update tooltip
+            updateTooltip();
+        }
+        
+        // ============================================
+        // DRAW RADIAL GRADIENT
+        // ============================================
+        
+        function drawRadialGradient() {
+            const cx = width / 2;
+            const cy = height / 2;
+            const maxR = dist(0, 0, cx, cy) * 2;
+            
+            noStroke();
+            for (let r = maxR; r > 0; r -= 4) {
+                const inter = map(r, 0, maxR, 0, 1);
+                const c1 = color(60, 60, 60);  // Dark gray center
+                const c2 = color(0, 0, 0);      // Black edges
+                const col = lerpColor(c1, c2, inter);
+                fill(col);
+                ellipse(cx, cy, r * 2);
+            }
+        }
+        
+        // ============================================
+        // UPDATE TOOLTIP
+        // ============================================
+        
+        function updateTooltip() {
+            const tooltip = document.getElementById('tooltip');
+            
+            if (hoveredCircle) {
+                const movie = hoveredCircle.movie;
+                const revenue = movie.revenue > 0 ? `$${movie.revenue.toFixed(1)}M` : 'N/A';
+                
+                tooltip.innerHTML = `
+                    <div class="title">${movie.title}</div>
+                    <div class="info"><strong>Director:</strong> ${movie.director}</div>
+                    <div class="info"><strong>Year:</strong> ${movie.year}</div>
+                    <div class="info"><strong>Revenue:</strong> ${revenue}</div>
+                    <div class="info"><strong>Rating:</strong> ${movie.rating}/10</div>
+                `;
+                
+                tooltip.style.left = (mouseX + 15) + 'px';
+                tooltip.style.top = (mouseY + 15) + 'px';
+                tooltip.style.display = 'block';
+                
+                // Adjust if near edge
+                setTimeout(() => {
+                    const rect = tooltip.getBoundingClientRect();
+                    if (rect.right > window.innerWidth) {
+                        tooltip.style.left = (mouseX - rect.width - 15) + 'px';
+                    }
+                    if (rect.bottom > window.innerHeight) {
+                        tooltip.style.top = (mouseY - rect.height - 15) + 'px';
+                    }
+                }, 0);
+            } else {
+                tooltip.style.display = 'none';
+            }
+        }
+        
+        // ============================================
+        // WINDOW RESIZE - RESPONSIVE
+        // ============================================
+        
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            calculateGenreCenters();
+            positionCircles();
+        }
+    </script>
+</body>
+</html>
